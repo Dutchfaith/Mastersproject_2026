@@ -131,3 +131,73 @@ The solver prints:
 - **`mkp_solve()` now tries ALL item types as pivot candidates** and returns the best solution found. This eliminates the reliance on the heuristic and guarantees correctness.
 - **Added `mkp_solve_direct_ilp()`** as a fallback: a simpler configuration ILP without pivot constraints. If no pivot-based solution is feasible, this direct formulation is used instead. This handles edge cases where the pivot decomposition is too restrictive.
 - Updated `mkp.h` to declare `mkp_solve_direct_ilp()`.
+
+
+**Proofs**
+# Theorem 5: From mod-IP(a) Solution to Multiple Knapsack Solution
+
+**Theorem:** Given a feasible solution x̃ to mod-IP(a), we can construct a feasible solution to the Multiple Knapsack Problem in polynomial time.
+
+**Proof:**
+
+Given a Multiple Knapsack instance with:
+- n items with weights w₁, ..., wₙ and profits p₁, ..., pₙ
+- m knapsacks with capacities c₁, ..., cₘ
+
+Let x̃ ∈ {0,1}ⁿ be a feasible solution to mod-IP(a) where:
+- Σᵢ₌₁ⁿ wᵢx̃ᵢ ≡ a (mod D)
+- x̃ satisfies all knapsack capacity constraints
+
+We construct a solution x* for the Multiple Knapsack Problem as follows:
+
+1. **Initialize:** Set x*ᵢⱼ = 0 for all items i ∈ [n] and knapsacks j ∈ [m].
+
+2. **Assignment Phase:** For each item i with x̃ᵢ = 1:
+   - Find the first knapsack j that has sufficient remaining capacity for item i
+   - Set x*ᵢⱼ = 1
+   - Update the remaining capacity of knapsack j
+
+3. **Feasibility:** Since x̃ satisfies the capacity constraints in mod-IP(a), we know that:
+   - The total weight Σᵢ: x̃ᵢ₌₁ wᵢ can be distributed among the m knapsacks
+   - Each knapsack's capacity constraint is respected
+
+4. **Profit Preservation:** The total profit of solution x* equals:
+   
+   Σᵢ₌₁ⁿ Σⱼ₌₁ᵐ pᵢx*ᵢⱼ = Σᵢ: x̃ᵢ₌₁ pᵢ
+   
+   which matches the profit from the mod-IP(a) solution.
+
+Therefore, x* is a feasible solution to the Multiple Knapsack Problem with the same profit as the mod-IP(a) solution. ∎
+
+# Lemma 9: From Multiple Knapsack Solution to mod-IP(a) Solution
+
+**Lemma:** Given a feasible solution x* to the Multiple Knapsack Problem with total weight congruent to a modulo D, we can construct a feasible solution to mod-IP(a) in polynomial time.
+
+**Proof:**
+
+Given a feasible Multiple Knapsack solution x* ∈ {0,1}ⁿˣᵐ where:
+- x*ᵢⱼ = 1 if item i is in knapsack j, and 0 otherwise
+- Σᵢ₌₁ⁿ wᵢx*ᵢⱼ ≤ cⱼ for all knapsacks j ∈ [m]
+- Each item is assigned to at most one knapsack: Σⱼ₌₁ᵐ x*ᵢⱼ ≤ 1 for all i
+
+Assume the total weight satisfies: Σᵢ₌₁ⁿ Σⱼ₌₁ᵐ wᵢx*ᵢⱼ ≡ a (mod D)
+
+We construct x̃ ∈ {0,1}ⁿ for mod-IP(a) as follows:
+
+1. **Define:** Set x̃ᵢ = maxⱼ∈[m] x*ᵢⱼ for each item i
+   - This equals 1 if item i is in any knapsack, 0 otherwise
+
+2. **Modular Constraint:** The total weight under x̃ is:
+   
+   Σᵢ₌₁ⁿ wᵢx̃ᵢ = Σᵢ₌₁ⁿ wᵢ · maxⱼ∈[m] x*ᵢⱼ = Σᵢ₌₁ⁿ Σⱼ₌₁ᵐ wᵢx*ᵢⱼ ≡ a (mod D)
+
+3. **Capacity Constraints:** The solution x̃ satisfies all capacity constraints because:
+   - The items selected by x̃ are exactly those in the Multiple Knapsack solution
+   - These items already fit within the combined capacity of all knapsacks
+
+4. **Profit Preservation:** The total profit is:
+   
+   Σᵢ₌₁ⁿ pᵢx̃ᵢ = Σᵢ₌₁ⁿ Σⱼ₌₁ᵐ pᵢx*ᵢⱼ
+
+Therefore, x̃ is a feasible solution to mod-IP(a) with the same profit as the Multiple Knapsack solution. ∎
+
