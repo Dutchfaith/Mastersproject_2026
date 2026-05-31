@@ -172,6 +172,94 @@ We construct a solution x* for the Multiple Knapsack Problem as follows:
 Therefore, x* is a feasible solution to the Multiple Knapsack Problem with the same profit as the mod-IP(a) solution. ∎
 
 # Lemma 9: From Multiple Knapsack Solution to mod-IP(a) Solution
+### Lemma 9 (Pivot-Existenz für das MKP)
+
+#### Voraussetzung
+
+Gegeben ist eine zulässige Instanz des Multiple Knapsack Problems (MKP) mit $m$ Rucksäcken, Kapazitäten $C_1, \dots, C_m$, sowie $d$ verschiedenen echten Gegenstandstypen mit Gewichten $w_1, \dots, w_d$, von denen jeweils eine maximale Anzahl $n_k$ verfügbar ist. Es gilt $d \leq w_{\max}$.
+
+Zudem existiert eine **zulässige, optimale Lösung des Standard-ILPs** für diese Instanz. Diese Lösung wird durch die ganzzahligen Variablen $x_{ik}^*$ beschrieben, welche angeben, wie viele Gegenstände vom Typ $k$ im Rucksack $i$ liegen.
+
+Wir teilen die Rucksäcke anhand der Schwelle $w_{\max}^4$ auf:
+
+* Menge der großen Rucksäcke: $B = \{i \mid C_i \geq w_{\max}^4\}$
+* Menge der kleinen Rucksäcke: $S = \{1, \dots, m\} \setminus B$
+
+#### Behauptung
+
+Es existiert mindestens ein echter Gegenstandstyp $a \in \{1, \dots, d\}$ (das **Pivotelement**), sodass das von Lars Rohwedder definierte Modulo-System `mod-IP(a)` zulässig (feasible) ist und eine Lösung mit exakt demselben Gesamtprofit besitzt.
+
+#### Zu zeigen
+
+Es ist zu zeigen, dass die vorliegende Standard-ILP-Lösung $x_{ik}^*$ (erweitert um Dummy-Items für den Restraum) alle vier Bedingungen des relaxierten `mod-IP(a)`-Systems für dieses spezifische $a$ erfüllt:
+
+1. **Exakte Last** für alle kleinen Rucksäcke $i \in S$.
+2. **Modulo-Kongruenz** $\pmod{w_a}$ für alle großen Rucksäcke $i \in B$.
+3. **Genügend Pivot-Reserve** auf den großen Rucksäcken: $\sum_{i \in B} x_{ia}^* \geq |B| \cdot w_{\max}^2$.
+4. **Einhaltung der globalen Stückzahlen** (Multiplizitäten $n_k$).
+
+---
+
+### Beweis
+
+#### Schritt 1: Einführung der Dummy-Items (Virtuelles Auffüllen)
+
+Da die echte Lösung $x_{ik}^*$ die Kapazitäten der Rucksäcke im Standard-ILP nur einhalten, aber nicht zwingend exakt treffen muss ($\leq C_i$), führen wir für jeden Rucksack ein künstliches **Dummy-Item** ($k = d+1$) mit dem Gewicht $w_{d+1} = 1$ und dem Profit $p_{d+1} = 0$ ein.
+
+Wir definieren die Anzahl der Dummy-Items in Rucksack $i$ so, dass der verbleibende Leerraum exakt gefüllt wird: $x_{i, d+1}^* = C_i - \sum_{k=1}^d w_k x_{ik}^*$. Damit gilt für alle Rucksäcke (klein und groß) eine exakte Gleichung:
+
+
+$$\sum_{k=1}^{d+1} w_k x_{ik}^* = C_i$$
+
+
+Da Dummy-Items $0$ Profit bringen, bleibt der Gesamtprofit der Lösung unverändert.
+
+#### Schritt 2: Erfüllung von Bedingung 1 (Kleine Rucksäcke)
+
+Für die kleinen Rucksäcke $i \in S$ fordert `mod-IP(a)` die exakte Einhaltung der Kapazität. Da durch unsere Konstruktion mit den Dummy-Items $\sum_{k=1}^{d+1} w_k x_{ik}^* = C_i$ gilt, ist Bedingung 1 für jeden Rucksack $i \in S$ automatisch und unabhängig von der Wahl des Pivots $a$ erfüllt.
+
+#### Schritt 3: Erfüllung von Bedingung 2 (Große Rucksäcke & Modulo)
+
+Für jeden großen Rucksack $i \in B$ gilt ebenfalls die exakte Gleichheit $\sum_{k=1}^{d+1} w_k x_{ik}^* = C_i$.
+In der Zahlentheorie impliziert eine exakte Gleichheit zweier Zahlen immer auch deren Kongruenz modulo einer beliebigen anderen Zahl $w_a$. Es gilt also für jedes beliebige $a$:
+
+
+$$\sum_{k=1}^{d+1} w_k x_{ik}^* = C_i \implies \sum_{k=1}^{d+1} w_k x_{ik}^* \equiv C_i \pmod{w_a}$$
+
+
+Damit ist Bedingung 2 (die Modulo-Bedingung) für alle Rucksäcke in $B$ ebenfalls erfüllt.
+
+#### Schritt 4: Erfüllung von Bedingung 3 (Existenz des Pivots via Schubfachprinzip)
+
+Nun müssen wir zeigen, dass es ein $a$ gibt, von dem *besonders viele* Gegenstände in den großen Rucksäcken liegen.
+
+1. **Mindestanzahl an echten Gegenständen:** Jeder große Rucksack $i \in B$ hat eine Kapazität von mindestens $w_{\max}^4$. Da das maximale Gewicht eines echten Gegenstands durch $w_{\max}$ beschränkt ist, passen selbst im "schlechtesten" Fall (wenn wir nur die schwersten Gegenstände nutzen würden) extrem viele Gegenstände in die großen Rucksäcke. Die Gesamtzahl aller echten Gegenstände über alle großen Rucksäcke hinweg beträgt:
+
+$$\sum_{i \in B} \sum_{k=1}^d x_{ik}^* \geq \sum_{i \in B} \frac{C_i - w_{\max}}{w_{\max}} \geq |B| \cdot (w_{\max}^3 - 1)$$
+
+
+2. **Anwendung des Schubfachprinzips:** Diese gigantische Menge an Gegenständen verteilt sich auf nur $d$ verschiedene echte Gegenstandstypen. Laut dem Dirichletschen Schubfachprinzip muss es mindestens einen Typ $a \in \{1, \dots, d\}$ geben, dessen Anzahl auf den großen Rucksäcken mindestens dem Durchschnitt entspricht:
+
+$$\sum_{i \in B} x_{ia}^* \geq \frac{\text{Gesamtanzahl echte Items}}{d} \geq \frac{|B| \cdot (w_{\max}^3 - 1)}{d}$$
+
+
+3. **Nutzen der Voraussetzung $d \leq w_{\max}$:** Da es nicht mehr Typen als das maximale Gewicht geben kann ($d \leq w_{\max}$), wird der Nenner maximiert und wir erhalten die sichere Untergrenze:
+
+$$\sum_{i \in B} x_{ia}^* \geq \frac{|B| \cdot (w_{\max}^3 - 1)}{w_{\max}} \geq |B| \cdot w_{\max}^2$$
+
+
+
+Damit haben wir bewiesen, dass ein Gegenstandstyp $a$ existiert, der die geforderte **Pivot-Reserve** (Bedingung 3) erfüllt.
+
+#### Schritt 5: Erfüllung von Bedingung 4 (Globale Stückzahlen)
+
+Da die Belegung $x_{ik}^*$ direkt aus einer zulässigen Lösung des Standard-ILPs stammt, überschreitet sie per Definition nirgendwo die maximal verfügbaren Stückzahlen $n_k$ der Gegenstände. Bedingung 4 ist somit erfüllt.
+
+#### Schlußfolgerung
+
+Wählt man genau diesen durch das Schubfachprinzip garantierten Gegenstandstyp $a$ als Pivotelement, so bildet unsere modifizierte Standard-ILP-Lösung eine mathematisch zulässige Belegung für das System `mod-IP(a)`. Da die echten Gegenstände nicht verändert wurden und die Dummy-Items keinen Profit besitzen, ist der Gesamtwert der Lösung exakt identisch mit dem optimalen Wert des Standard-ILPs.
+
+Das System `mod-IP(a)` ist somit für dieses $a$ zulässig (feasible). $\blacksquare$
 
 **Lemma:** Given a feasible solution x* to the Multiple Knapsack Problem with total weight congruent to a modulo D, we can construct a feasible solution to mod-IP(a) in polynomial time.
 
